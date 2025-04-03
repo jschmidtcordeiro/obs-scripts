@@ -1,15 +1,16 @@
 obs = obslua
 
--- Store the target scene name
-local target_scene_name = ""
+-- Store the target scene names
+local target_scenes = {}
 
 function script_description()
-    return "Controls camera preset when switching to a specific scene"
+    return "Controls camera preset when switching to specific scenes"
 end
 
 function script_properties()
     local props = obs.obs_properties_create()
-    local p = obs.obs_properties_add_list(props, "target_scene", "Target Scene", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
+    local p = obs.obs_properties_add_list(props, "target_scenes", "Target Scenes", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(p, "", "")  -- Add empty option
     
     -- Get all scenes and add them to the dropdown
     local scenes = obs.obs_frontend_get_scenes()
@@ -21,12 +22,44 @@ function script_properties()
         obs.source_list_release(scenes)
     end
     
+    -- Add a button to add more scenes
+    obs.obs_properties_add_button(props, "add_scene", "Add Another Scene", function(props, property)
+        local p = obs.obs_properties_get(props, "target_scenes")
+        obs.obs_property_list_clear(p)
+        obs.obs_property_list_add_string(p, "", "")
+        
+        local scenes = obs.obs_frontend_get_scenes()
+        if scenes then
+            for _, scene in ipairs(scenes) do
+                local scene_name = obs.obs_source_get_name(scene)
+                obs.obs_property_list_add_string(p, scene_name, scene_name)
+            end
+            obs.source_list_release(scenes)
+        end
+        return true
+    end)
+    
     return props
 end
 
 function script_update(settings)
-    target_scene_name = obs.obs_data_get_string(settings, "target_scene")
-    print("[DEBUG] Target scene updated to: " .. target_scene_name)
+    -- Clear previous scenes
+    target_scenes = {}
+    
+    -- Get all selected scenes
+    local count = obs.obs_data_get_array_count(settings, "target_scenes")
+    for i = 0, count - 1 do
+        local scene = obs.obs_data_get_array_item(settings, "target_scenes", i)
+        if scene then
+            local scene_name = obs.obs_data_get_string(scene, "value")
+            if scene_name ~= "" then
+                table.insert(target_scenes, scene_name)
+            end
+            obs.obs_data_release(scene)
+        end
+    end
+    
+    print("[DEBUG] Target scenes updated to: " .. table.concat(target_scenes, ", "))
     io.flush()
 end
 
@@ -55,10 +88,14 @@ function on_scene_change(current_scene)
     print("[DEBUG] Scene changed to: " .. scene_name)
     io.flush()
 
-    if scene_name == target_scene_name then
-        print("[DEBUG] Target scene detected, controlling camera...")
-        io.flush()
-        control_camera()
+    -- Check if the current scene is in our target scenes list
+    for _, target_scene in ipairs(target_scenes) do
+        if scene_name == target_scene then
+            print("[DEBUG] Target scene detected, controlling camera...")
+            io.flush()
+            control_camera()
+            break
+        end
     end
 end
 
