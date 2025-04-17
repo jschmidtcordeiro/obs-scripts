@@ -158,28 +158,18 @@ function control_camera(preset_name)
     print("[DEBUG] Command: " .. command)
     io.flush()
 
-    -- Run the command in the background and capture output to a temporary file
-    local temp_file = os.tmpname()
-    local bg_command = string.format("%s > %s 2>&1 &", command, temp_file)
-    os.execute(bg_command)
+    local handle = io.popen(command .. " 2>&1")
 
-    -- Create a timer to check the response
-    local timer = obs.timer_add(function()
-        local file = io.open(temp_file, "r")
-        if file then
-            local result = file:read("*a")
-            file:close()
-            os.remove(temp_file)
-            
-            if result and result ~= "" then
-                print("[DEBUG] cURL Response:\n" .. result)
-                io.flush()
-            end
-            
-            -- Remove the timer after we get the response
-            obs.timer_remove(timer)
-        end
-    end, 100) -- Check every 100ms
+    if handle then
+        local result = handle:read("*a")
+        handle:close()
+
+        print("[DEBUG] cURL Response:\n" .. result)
+        io.flush()
+    else
+        print("[ERROR] Failed to execute cURL command")
+        io.flush()
+    end
 end
 
 function on_scene_change(current_scene)
@@ -192,6 +182,11 @@ function on_scene_change(current_scene)
     io.flush()
 
     -- Check if the current scene is in our target scenes list
+    print("[DEBUG] Target scenes:")
+    for _, target_scene in ipairs(target_scenes) do
+        print(string.format("[DEBUG] %s -> %s", target_scene.scene_name, target_scene.preset_name))
+    end
+    io.flush()
     for _, target_scene in ipairs(target_scenes) do
         if scene_name == target_scene.scene_name then
             print("[DEBUG] Target scene detected, controlling camera to preset: " .. target_scene.preset_name)
