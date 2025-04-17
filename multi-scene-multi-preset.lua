@@ -6,8 +6,8 @@ local settings = nil
 
 -- Define available camera presets
 local camera_presets = {
-    {name = "Tertuliante", id = 0},
-    {name = "Mesa2", id = 1},
+    {name = "Mesa1", id = 0},
+    {name = "MANIFESTACAO", id = 2},
     {name = "Mesa3", id = 2},
     {name = "Mesa4", id = 3},
     {name = "Mesa5", id = 4}
