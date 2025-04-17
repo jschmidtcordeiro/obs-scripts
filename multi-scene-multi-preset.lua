@@ -154,22 +154,21 @@ function control_camera(preset_name)
         end
     end
 
-    local command = string.format([[curl -X POST "http://192.168.50.205/cmdparse" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" --data-raw "ReqUserName=YWRtaW4=&ReqUserPwd=YWRtaW4=&CmdData={\"Cmd\":\"ReqPresetCtrl\",\"Content\":{\"PresetCmd\":\"Call\",\"PresetID\":%d,\"PresetName\":\"%s\"}}" --insecure"]], preset_id, preset_name)
+    -- Create the JSON payload
+    local json_data = string.format([[{"Cmd":"ReqPresetCtrl","Content":{"PresetCmd":"Call","PresetID":%d,"PresetName":"%s"}}]], preset_id, preset_name)
+    
+    -- Windows command
+    local command = string.format([[curl -X POST "http://192.168.50.205/cmdparse" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" --data-raw "ReqUserName=YWRtaW4=&ReqUserPwd=YWRtaW4=&CmdData=%s" --insecure]], json_data)
+    
     print("[DEBUG] Command: " .. command)
     io.flush()
 
-    local handle = io.popen(command .. " 2>&1")
+    -- Execute command using os.execute for Windows
+    local success = os.execute(command)
+    local result = success and "Command executed successfully" or "Command execution failed"
 
-    if handle then
-        local result = handle:read("*a")
-        handle:close()
-
-        print("[DEBUG] cURL Response:\n" .. result)
-        io.flush()
-    else
-        print("[ERROR] Failed to execute cURL command")
-        io.flush()
-    end
+    print("[DEBUG] Command result: " .. result)
+    io.flush()
 end
 
 function on_scene_change(current_scene)
