@@ -8,8 +8,8 @@ local settings = nil
 local camera_presets = {
     {name = "Mesa1", id = 0},
     {name = "MANIFESTACAO", id = 2},
-    {name = "Mesa3", id = 2},
-    {name = "Mesa4", id = 3},
+    {name = "PORTA1", id = 7},
+    {name = "PORTA2", id = 3},
     {name = "Mesa5", id = 4}
 }
 
