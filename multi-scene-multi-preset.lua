@@ -155,10 +155,10 @@ function control_camera(preset_name)
     end
 
     -- Create the JSON payload
-    local json_data = string.format([[{"Cmd":"ReqPresetCtrl","Content":{"PresetCmd":"Call","PresetID":%d,"PresetName":"%s"}}]], preset_id, preset_name)
+    local json_data = string.format("{\\\"Cmd\\\":\\\"ReqPresetCtrl\\\",\\\"Content\\\":{\\\"PresetCmd\\\":\\\"Call\\\",\\\"PresetID\\\":%d,\\\"PresetName\\\":\\\"%s\\\"}}", preset_id, preset_name)
     
     -- Windows command
-    local command = string.format([[curl -X POST "http://192.168.50.205/cmdparse" -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" --data-raw "ReqUserName=YWRtaW4=&ReqUserPwd=YWRtaW4=&CmdData=%s" --insecure]], json_data)
+    local command = string.format('curl -X POST \"http://192.168.50.205/cmdparse\" -H \"Content-Type: application/x-www-form-urlencoded;charset=UTF-8\" --data-raw \"ReqUserName=YWRtaW4=&ReqUserPwd=YWRtaW4=&CmdData=%s\" --insecure', json_data)
     
     print("[DEBUG] Command: " .. command)
     io.flush()
